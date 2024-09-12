@@ -123,8 +123,21 @@ postfile simcheck1  int(rep) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) fl
 * With this output file we collect information that we need to reconstruct  the dataset for an ith repetition		
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3) ///
 	using rngstates1_postfile, replace
-	
 
+//	
+// Simulation testing
+// Uncomment this block to run only one step of the simulation
+dosubset, reps(`reps') 	
+postclose simcheck1
+postclose rngstates1	
+// End simulation testing
+//
+	
+**************************************
+* Executing  the main loop  **********
+**************************************
+	
+	
 // For each value we want for each parameter (we have a very large number of scenarios!)
 	foreach j of numlist 0.2 0.4 0.6 {             // VE
 			foreach k of numlist 0.1 0.2 0.3 {         // st
