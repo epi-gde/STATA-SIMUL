@@ -179,9 +179,8 @@ end
 ********************************************
 * Here is the programe to run the analysis *
 ********************************************
-
+// This part will fill the results file with 3 records Total, NoAdj and Adj
 program define analysis_data
-
 
 	syntax, [rep(int 0) post(string) ve1(string) st1(string)  s_rr1(string) possee1(string) negsee1(string)]
 
@@ -208,6 +207,8 @@ program define analysis_data
  scalar b4notst_c = A[1,1]
  scalar b4notst_d = A[1,2]
  
+ 
+ // --------------------------  Total -----------------------------
  * Here we are calculating the estimated VE in the total simulated population, which should be more or less equal to the "true VE"
 capture noisily logistic case vacc 
  // Here we prepare to output the information - the N replications for each combination of ve, st, s_rr, possee, negsee, the logistic values, the checking values
@@ -219,6 +220,9 @@ capture noisily logistic case vacc
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   /// 
 		(.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) (.) (.) (.)
  
+ 
+ 
+// --------------------------  NoAdj -----------------------------
 // Then we do the analysis											
 * We need to keep those seeing the GP, this emulates the TND study
 keep if seeGP==1
@@ -257,6 +261,9 @@ capture noisily logistic case vacc
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   /// 
 		(.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) (.) (.) (.)
 
+		
+// --------------------------  Adj -----------------------------
+		
 // We then carry out a VE analysis adjusted for selftest use: 		
  capture noisily logistic case vacc selftest
 

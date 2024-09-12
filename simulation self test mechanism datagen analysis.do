@@ -41,6 +41,12 @@ capture postclose rngstates1
 clear
 
 
+													
+// Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
+// Number of repetitions for that stream
+local reps 10
+
+
 ***************************************************************************
 * Setting fixed global parameters ******************************************
 ***************************************************************************
@@ -71,11 +77,29 @@ global SEEGP = 0.1
 include "simulation self test mechanism datagen analysis_include"	
 													// Open the included do-file and have a look.
 
+// The dosubset programm is designed to allow redo of a subset with fixed parameters 
+// Before calling this part you can retrieve the rngstate which was used into the rngstate file 
 													
-// Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
-local reps 10
+program define dosubset
+		 syntax [, reps(int 10) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0)]
 
-													
+        local repsplus1 = `reps'+1
+		* For each of the scenarios above we would like 1000 repetitions (to be changed to 10000 repetitions)								
+		forvalues i=1/`repsplus1' {
+						    
+			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `poseee' `negsee' (`timer') ")
+			_dots `i' 0
+			
+			
+			if `i'>`reps' continue, break
+			
+			// This is where we run the data generation and analysis programmes, to obtain the results:
+			 quietly datagen, ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
+			 quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")
+		
+	     }
+end
+
 
 **************************************
 * Performing the simulation **********
@@ -83,7 +107,6 @@ local reps 10
 
 timer clear 1
 
-local repsplus1 = `reps'+1
 
 local timer1 = 0
 
@@ -98,11 +121,11 @@ postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstat
 	
 
 // For each value we want for each parameter (we have a very large number of scenarios!)
-	foreach j of numlist 0.2 0.4 0.6 {             // negsee
-			foreach k of numlist 0.1 0.2 0.3 {         // possee
+	foreach j of numlist 0.2 0.4 0.6 {             // VE
+			foreach k of numlist 0.1 0.2 0.3 {         // st
 				foreach l of numlist 1 1.5 2 2.5 {        // RR  
-				foreach m of numlist 0.5 0.7 1 1.5 2 {        // st  
-					foreach n of numlist  0.5 0.7 1 1.5 2 {        // VE 
+				foreach m of numlist 0.5 0.7 1 1.5 2 {        // possee  
+					foreach n of numlist  0.5 0.7 1 1.5 2 {        //  negsee
 
 					
 		timer on 1	
@@ -112,34 +135,20 @@ postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstat
 		local rngstate3 = substr(c(rngstate),4001,.)
 		
 		* Here is our output file to capture the states, so we can replicate the simulation for starting from first repetition  
-		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")
-				
+		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
 		
-			* For each of the scenarios above we would like 1000 repetitions (to be changed to 10000 repetitions)								
-		forvalues i=1/`repsplus1' {
-						    
-			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `n' `m' `l' `k' `j' (`timer1') ")
-			_dots `i' 0
-			
-			
-			if `i'>`reps' continue, break
-			
-			// This is where we run the data generation and analysis programmes, to obtain the results:
-			 quietly datagen, ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n')
-			 quietly analysis_data, rep(`i') post(simcheck1) ve1("`j'") st1("`k'")  s_rr1("`l'") possee1("`m'") negsee1("`n'")
-		
-	     }
+		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') poseee(`m') negsee(`n') timer(`timer1')		
 	  
-		  timer off 1 
-		  quietly timer list 1
-		  local timer1 = r(t1)
-		  timer clear 1
+		timer off 1 
+		quietly timer list 1
+		local timer1 = r(t1)
+		timer clear 1
 
 					}   // n negsee
-				}    //  m possee
+				}    //  m poseee
 			}    //  l  RR
 		}   //  k  st
-	}    //   j  ve 
+	}    //   j  VE
 
 
 // And we close the files that capture the outputs:
