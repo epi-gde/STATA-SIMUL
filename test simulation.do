@@ -11,7 +11,7 @@ set obs 100000
 
 timer on 1
 
-gen case = 0 in 1/9000
+gen case = 0 in 1/90000
 replace case = 1 if case==.
 
 gen random=runiform() if case==1 // Creates a random variable only for cases
@@ -32,7 +32,7 @@ set obs 100000
 timer on 2
 
 gen case = 1
-replace case = 0 in 1/9000
+replace case = 0 in 1/90000
 
 gen random=runiform() if case==1 // Creates a random variable only for cases
 sort random	
@@ -51,7 +51,7 @@ set obs 100000
 
 timer on 3
 
-gen case = 0 in 1/9000
+gen case = 0 in 1/90000
 replace case = 1 if case==.
 
 gen vacc=rbinomial(1,0.4) if case==1 // Creates a random variable only for cases
