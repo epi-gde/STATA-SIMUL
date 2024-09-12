@@ -5,12 +5,13 @@
 // Part of VEBIS project
 // This script is for a simulation for bias mechanism 1 (please see associated protocol)
 // Please see also the plan of analysis for "Simulation study for article on self-testing and COVID-19 VE"
-// GD Review 
+// Gilles Desve Review in september 2024
 
 
 // Version History
-// v1
+// v2
 //     - Original working version
+//     - Restructured 12 September 2024
 
 // Question, how do I loop around these different values?
 

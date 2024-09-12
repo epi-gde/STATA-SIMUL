@@ -2,6 +2,7 @@
 // December 2023
 // EpiConcept
 // Esther Kissling
+// Gilles Desve Review in september 2024
 // Part of VEBIS project
 // This script is for a simulation for bias mechanism 1 (please see associated protocol)
 // Please see also the plan of analysis for "Simulation study for article on self-testing and COVID-19 VE"
@@ -14,8 +15,9 @@
 
 
 // Version History
-// v2
-//     - New version August 2024
+// v3
+//   - New version 2 August 2024
+//   - Restructured 12 September 2024  
 
 
 
@@ -81,13 +83,13 @@ include "simulation self test mechanism datagen analysis_include"
 // Before calling this part you can retrieve the rngstate which was used into the rngstate file 
 													
 program define dosubset
-		 syntax [, reps(int 10) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0)]
+		 syntax [, reps(int 10) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0) loop(int 0)]
 
         local repsplus1 = `reps'+1
 		* For each of the scenarios above we would like 1000 repetitions (to be changed to 10000 repetitions)								
 		forvalues i=1/`repsplus1' {
 						    
-			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `poseee' `negsee' (`timer') ")
+			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `poseee' `negsee' (`timer')/`loop' ")
 			_dots `i' 0
 			
 			
@@ -106,9 +108,12 @@ end
 **************************************
 
 timer clear 1
-
+timer clear 2
+timer on 2
 
 local timer1 = 0
+local counter = 1
+
 
 * Here is our output file of the simulation - we are giving the variable names here for what we collect.
 * As a reminder: "Method" refers to the VE in the VE in the population that consults the GP, unadjusted and adjusted for self-testing
@@ -137,8 +142,9 @@ postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstat
 		* Here is our output file to capture the states, so we can replicate the simulation for starting from first repetition  
 		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
 		
-		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') poseee(`m') negsee(`n') timer(`timer1')		
-	  
+		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')		
+	    local ++counter
+	    
 		timer off 1 
 		quietly timer list 1
 		local timer1 = r(t1)
@@ -155,3 +161,5 @@ postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstat
 postclose simcheck1
 postclose rngstates1
 
+timer off 2
+timer list 
