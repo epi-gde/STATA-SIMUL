@@ -162,8 +162,10 @@ end
 * Performing the simulation **********
 **************************************
 
+timer clear 1
+
 // Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
-local reps 1000
+local reps 10
 local repsplus1 = `reps'+1
 
 * Here is our output file of the simulation - we are giving the variable names here for what we collect.
@@ -175,20 +177,22 @@ postfile simcheck1  int(rep) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) fl
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3) ///
 	using rngstates1_postfile, replace
 	
-
+	local timer1 = 0
+	
 // For each value we want for each parameter (we have a very large number of scenarios!)
 	foreach j of numlist 0.2 0.4 0.6 {
 			foreach k of numlist 0.1 0.2 0.3 {
 				foreach l of numlist 1 1.5 2 2.5 {
 				foreach m of numlist 0.5 0.7 1 1.5 2 {
 					foreach n of numlist  0.5 0.7 1 1.5 2 {
-					   
+
+	    timer on 1
+
 			* For each of the scenarios above we would like 1000 repetitions (to be changed to 10000 repetitions)								
 						forvalues i=1/`repsplus1' {
 						    
-		if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions)")
+		if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions)  `timer1' ")
 		_dots `i' 0
-		
 		// Here we collect info that can help us reconstruct the dataset (we need to partition to 3, as they are quite large)
 		local rngstate1 = substr(c(rngstate),1,2000)
 		local rngstate2 = substr(c(rngstate),2001,2000)
@@ -202,15 +206,20 @@ postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstat
 		// This is where we run the data generation and analysis programmes, to obtain the results:
 		 quietly datagen, ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n')
 		 quietly analysis_data, rep(`i') post(simcheck1) ve1("`j'") st1("`k'")  s_rr1("`l'") possee1("`m'") negsee1("`n'")
-		
-		
+				
 
-	  }
-	  		}
-				}
-					}
-						}
-							}
+	                      }  // repetitions 
+
+		timer off 1				  
+		quietly timer list 
+		local timer1 = r(t1)  
+	    timer clear 1
+
+					}   // n negsee
+				}    //  m possee
+			}    //  l  RR
+		}   //  k  st
+	}    //   j  ve 
 
 
 // And we close the files that capture the outputs:

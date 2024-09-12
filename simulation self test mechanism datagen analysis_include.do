@@ -5,7 +5,6 @@
 // Part of VEBIS project
 // This script is for a simulation for bias mechanism 1 (please see associated protocol)
 // Please see also the plan of analysis for "Simulation study for article on self-testing and COVID-19 VE"
-// GD Review 
 
 
 // Version History
