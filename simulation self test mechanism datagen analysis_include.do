@@ -37,7 +37,7 @@ local OR = (1-`ve')
 ***************************************************************************
 
 drop _all	// drops all observations and variables
-set obs $TOT	// Setting the total number of observations
+set obs $TOT // Setting the total number of observations
 
 
 // Cases	 - the ratio of cases to controls was 1:5
@@ -53,7 +53,7 @@ replace case = 1 if case==.
 // vaccine coverage - 45% among controls - this is fixed.
 gen random=runiform() if case==0 // Creates a random variable only for controls
 sort random	
-local coverage = int($CASE * $VC)	// Here we obtain the number of controls that should be vaccinated (45% of controls)
+local coverage = int($CONTR * $VC)	// Here we obtain the number of controls that should be vaccinated (45% of controls)
 di `coverage'
 gen vacc = 0                     // We create the vaccination variable as not vaccinated by default
 replace vacc=1 in 1/`coverage' 	//  and add 1 in the randomly sorted controls from 1 to 45% of controls

@@ -32,26 +32,16 @@ set seed 576819506
 capture postclose simcheck1
 capture postclose rngstates1
 
-
-*********************************************************
-* Starting a program that will be replicated many times *
-* We distinguish between a program that generates data 	*
-* and a program that does the analysis					*
-*********************************************************
-
-//Here we define the simulation program, called "datagen"
 clear
-
-
-													
-// Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
-// Number of repetitions for that stream
-local reps 10
 
 
 ***************************************************************************
 * Setting fixed global parameters ******************************************
 ***************************************************************************
+												
+// Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
+// Number of repetitions for that stream
+local reps 10
 
 
 * N total (this is fixed)
@@ -73,20 +63,33 @@ global INVSPEC_SELFTEST = (1-0.99)
 global SEEGP = 0.1
 
 
+*********************************************************
+* include datagen and analys routines                   *
+* Datagen generates data for a set of parameters        *
+* and analysis_data does the analysis					*
+*********************************************************
+
 // Here we have as an included file the main part of our data generation
 // This randomly selects patients to allocate the various parameters to.
 // And we also define the data analysis program which will be used in the simulation
 include "simulation self test mechanism datagen analysis_include"	
 													// Open the included do-file and have a look.
 
+
+***************************************************************************
+* define the core routine to be executed repetively with one set of parameters 
+***************************************************************************
 // The dosubset programm is designed to allow redo of a subset with fixed parameters 
-// Before calling this part you can retrieve the rngstate which was used into the rngstate file 
+// Before calling this part independently, you can retrieve the rngstate 
+// which was used originaly saved into the rngstate file 
 													
 program define dosubset
-		 syntax [, reps(int 10) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0) loop(int 0)]
+	 syntax [, reps(int 1) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0) loop(int 0) genonly ]
 
         local repsplus1 = `reps'+1
-		* For each of the scenarios above we would like 1000 repetitions (to be changed to 10000 repetitions)								
+		* For each scenarios tested we would like xxxx repetitions (xxxx defined in local "reps", see above)
+		* All parameters values for the scenario are transmited to that procedure 
+		* in addition to the fixed parameters defined at the beginning of this script
 		forvalues i=1/`repsplus1' {
 						    
 			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `poseee' `negsee' (`timer')/`loop' ")
@@ -97,14 +100,16 @@ program define dosubset
 			
 			// This is where we run the data generation and analysis programmes, to obtain the results:
 			 quietly datagen, ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
-			 quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")
-		
+			 if "`genonly'" == "" { 
+			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")
+		     } 
 	     }
 end
 
 
 **************************************
-* Performing the simulation **********
+* Performing the simulation 
+* Here we start the job ! 
 **************************************
 
 timer clear 1
@@ -124,14 +129,14 @@ postfile simcheck1  int(rep) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) fl
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3) ///
 	using rngstates1_postfile, replace
 
-//	
+/*	
 // Simulation testing
 // Uncomment this block to run only one step of the simulation
-dosubset, reps(`reps') 	
+dosubset, reps(1) genonly	
 postclose simcheck1
 postclose rngstates1	
 // End simulation testing
-//
+*/
 	
 **************************************
 * Executing  the main loop  **********
@@ -155,10 +160,13 @@ postclose rngstates1
 		* Here is our output file to capture the states, so we can replicate the simulation for starting from first repetition  
 		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
 		
-		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')		
+		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')	
+		
+		// Counter give feedback on where we are in the iterative process
 	    local ++counter
 	    
 		timer off 1 
+		// Timer give an indiction of time needed for each scenario (first display is 0)
 		quietly timer list 1
 		local timer1 = r(t1)
 		timer clear 1
