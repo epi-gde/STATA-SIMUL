@@ -51,12 +51,8 @@ replace case = 1 if case==.
 
 ***** Vaccine coverage
 // vaccine coverage - 45% among controls - this is fixed.
-gen random=runiform() if case==0 // Creates a random variable only for controls
-sort random	
-local coverage = int($CONTR * $VC)	// Here we obtain the number of controls that should be vaccinated (45% of controls)
-di `coverage'
-gen vacc = 0                     // We create the vaccination variable as not vaccinated by default
-replace vacc=1 in 1/`coverage' 	//  and add 1 in the randomly sorted controls from 1 to 45% of controls
+
+gen vacc = rbinomial(1,$VC) if case == 0
 
 // vaccine coverage among cases - depends on true VE, 20, 40, 60 
 * VC among cases
@@ -69,106 +65,48 @@ local N_UNVACCCONTROL = r(N)
 local N_VACCCASE = (`OR'*(`N_VACCCONTROL'/`N_UNVACCCONTROL')* $CASE/(1 + (`OR'*(`N_VACCCONTROL'/`N_UNVACCCONTROL'))))
 local VC_CASE = `N_VACCCASE'/$CASE
 di "`VC_CASE'"
-drop random
-gen random=runiform() if case==1 // Creates a random variable only for cases
-sort random	
-count if case==1
-local coverage = int(r(N)*`VC_CASE')
-di `coverage'
-// default vacc 0 for cases
-replace vacc = 0 if case == 1
-replace vacc=1 in 1/`coverage' if case==1
+
+replace vacc = rbinomial(1,`VC_CASE') if case == 1
 
 ***** Self-testing
 // We have information on the proportion self-testing overall (among vaccinated and unvaccinated), and assume 10%, 20% or 30% in an unvaccinated population
 // We assume vaccination is positively associated with self-testing, 1, 1.5, 2, 2.5
 * First we create the proportion self-testing among unvaccinated:
-drop random
-gen random=runiform() if vacc==0 // Creates a random variable only for unvaccinated
-sort random	
-count if vacc==0
-local prop = int(r(N)*`st')
-di `prop'
-//  Default selftest to 0 for unvaccinated
-gen selftest=0 if vacc == 0
-replace selftest=1 in 1/`prop' if vacc==0 
+gen selftest=  rbinomial(1,`st') if vacc == 0
 
 
 // Association (odds ratio) between vaccination and self-testing
 // 1, 1.5, 2, 2.5
-drop random
 local PROP_VACCSELFTEST = `st'*`s_rr'
-gen random=runiform() if vacc==1 // Creates a random variable only for vaccinated
-sort random	
-count if vacc==1
-local prop = int(r(N)*`PROP_VACCSELFTEST')
-di `prop'
 // Default selftest to 0 for vaccinated 
-replace selftest = 0 if vacc == 1
-replace selftest=1 in 1/`prop' if vacc==1 
+replace selftest = rbinomial(1,`PROP_VACCSELFTEST') if vacc == 1
 
 
 ***** Result of the self-test
 // Correlation between self-test result and PCR SARS-CoV-2 result
 // Sensitivity: 60% (but we could run sensitivity analyses) 
 // Specificity: 99%
-drop random
-gen random=runiform() if case==1 & selftest==1 
-sort random	
-count if case==1 & selftest==1
-local prop = int(r(N)*$SENS)
-di `prop'
 // Default selftestresult to 0 in that group 
-gen selftestresult =0 if case==1  &  selftest==1	
-replace selftestresult=1 in 1/`prop' if case==1 &  selftest==1
+gen selftestresult = rbinomial(1,$SENS) if case==1  &  selftest==1	
+
 
 // Among controls
-drop random
-gen random=runiform() if case==0 &  selftest==1 
-sort random	
-count if case==0 &  selftest==1
-local prop = int(r(N)* $INVSPEC_SELFTEST)
-di `prop'
 // Default to 0 in that group 
-replace selftestresult =0 if case==0 &  selftest==1 
-replace selftestresult=1 in 1/`prop' if case==0   &  selftest==1
+replace selftestresult = rbinomial(1,$INVSPEC_SELFTEST) if case==0 &  selftest==1 
 
 
 ****** Consulting a GP
 // We assume the probability of non-self-testing people seeing the GP is 10%
-
-drop random
-gen random=runiform() if selftest==0
-sort random	
-count if selftest==0
-local prop = int(r(N)*$SEEGP)
-di `prop'
-// Default to 0
-gen seeGP =0  if selftest==0
-replace  seeGP=1 in 1/`prop' if selftest==0
+gen seeGP =rbinomial(1,$SEEGP) if selftest==0
 
 
 // Now we change "seeing the GP" among those doing a self-test and the test is positive
-drop random
-gen random=runiform() if selftestresult==1 &  selftest==1 
-sort random	
-count if selftestresult==1 &  selftest==1 
-local prop = int(r(N)*`possee'*$SEEGP)	// Among those normally seeing a GP there is a different association
-di `prop'
 // Default to 0 in that group 
-replace seeGP =0 if selftestresult==1 &  selftest==1 
-replace seeGP=1 in 1/`prop' if selftestresult==1 &  selftest==1 
+replace seeGP = rbinomial(1,`possee'*$SEEGP) if selftestresult==1 &  selftest==1 
 
 // Now we change "seeing the GP" among those doing a self-test and the test is negative
-drop random
-gen random=runiform() if selftestresult==0 &  selftest==1 
-sort random	
-count if selftestresult==0 &  selftest==1
-local prop = int(r(N)*`negsee'*$SEEGP)	// Among those normally seeing a GP there is a different association
-di `prop'
 // Default to 0 in that group 
-replace seeGP =0 if selftestresult==0 &  selftest==1 	// The rest are 0
-replace seeGP=1 in 1/`prop' if selftestresult==0 &  selftest==1 
+replace seeGP =rbinomial(1,`negsee'*$SEEGP) if selftestresult==0 &  selftest==1 	// The rest are 0
 
 
 end
