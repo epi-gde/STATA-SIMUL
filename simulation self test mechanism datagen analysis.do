@@ -15,9 +15,10 @@
 
 
 // Version History
-// v3
+// v3.1
 //   - New version 2 August 2024
 //   - Restructured 12 September 2024  
+//   - use of binomial for binary variables instead of uniform
 
 
 
@@ -41,7 +42,7 @@ clear
 												
 // Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
 // Number of repetitions for that stream
-local reps 10
+local reps 100
 
 
 * N total (this is fixed)
@@ -61,6 +62,8 @@ global SPEC_SELFTEST = 0.99
 global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
+
+
 
 
 *********************************************************
