@@ -32,6 +32,7 @@ set rngstream 1		// This ensures that we can reconstruct the dataset
 set seed 576819506
 capture postclose simcheck1
 capture postclose rngstates1
+capture postclose simresult
 
 clear
 
@@ -63,12 +64,11 @@ global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
-local VE_LIST  0.4   // 0.2 0.4 0.6
-local ST_LIST  0.2   // 0.1 0.2 0.3
-local RR_LIST  1.5     // 1 1.5 2 2.5
-local POSSEE_LIST 0.7    // 0.5 0.7 1 1.5 2
-local NEGSEE_LIST 0.7    // 0.5 0.7 1 1.5 2
-
+local VE_LIST  0.2    // 0.2 0.4 0.6
+local ST_LIST  0.3       // 0.1 0.2 0.3
+local RR_LIST  2.5     // 1 1.5 2 2.5
+local POSSEE_LIST 2    // 0.5 0.7 1 1.5 2
+local NEGSEE_LIST 1    // 0.5 0.7 1 1.5 2
 
 
 *********************************************************
@@ -100,7 +100,7 @@ program define dosubset
 		* in addition to the fixed parameters defined at the beginning of this script
 		forvalues i=1/`repsplus1' {
 						    
-			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `poseee' `negsee' (`timer')/`loop' ")
+			if `i'==1 _dots 0 , title("Simulation running (`reps' repetitions) `ve' `st' `s_rr' `possee' `negsee' (`timer')/`loop' ")
 			_dots `i' 0
 			
 			
@@ -109,9 +109,10 @@ program define dosubset
 			// This is where we run the data generation and analysis programmes, to obtain the results:
 			 quietly datagen, ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
 			 if "`genonly'" == "" { 
-			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")
+			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")                         loop(`loop')
 		     } 
 	     }
+		 
 end
 
 
@@ -130,8 +131,9 @@ local counter = 1
 
 * Here is our output file of the simulation - we are giving the variable names here for what we collect.
 * As a reminder: "Method" refers to the VE in the VE in the population that consults the GP, unadjusted and adjusted for self-testing
-postfile simcheck1  int(rep) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) float(b se) int(N) float(case1vacc0 case1vacc1 case0vacc0 case0vacc1 st_case1vacc0 st_case1vacc1 st_case0vacc0 st_case0vacc1 nost_case1vacc0 nost_case1vacc1 nost_case0vacc0 nost_case0vacc1)   ///
+postfile simcheck1  int(rep) int(loop) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) float(b se) int(N) float(case1vacc0 case1vacc1 case0vacc0 case0vacc1 st_case1vacc0 st_case1vacc1 st_case0vacc0 st_case0vacc1 nost_case1vacc0 nost_case1vacc1 nost_case0vacc0 nost_case0vacc1)   ///
 	using simcheck1_postfile, replace
+
 	
 * With this output file we collect information that we need to reconstruct  the dataset for an ith repetition		
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3) ///
@@ -169,7 +171,7 @@ postclose rngstates1
 		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
 		
 		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')	
-		
+				
 		// Counter give feedback on where we are in the iterative process
 	    local ++counter
 	    
@@ -189,6 +191,20 @@ postclose rngstates1
 // And we close the files that capture the outputs:
 postclose simcheck1
 postclose rngstates1
+
+
+use simcheck1_postfile, clear
+keep if method == "Noadj"
+bysort loop : egen meanb = mean(b) 
+by loop : egen iter = max(rep) 
+gen OR = exp(meanb)
+gen VE = (1 - OR) *100 
+keep if rep == 1
+
+keep meanb OR VE iter ve1 st1 s_rr1 possee1 negsee1
+append using "simresult"
+save simresult, replace 
+
 
 timer off 2
 timer list 
