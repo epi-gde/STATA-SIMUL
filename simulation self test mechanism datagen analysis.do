@@ -63,6 +63,11 @@ global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
+local VE_LIST  0.4   // 0.2 0.4 0.6
+local ST_LIST  0.2   // 0.1 0.2 0.3
+local RR_LIST  1.5     // 1 1.5 2 2.5
+local POSSEE_LIST 0.7    // 0.5 0.7 1 1.5 2
+local NEGSEE_LIST 0.7    // 0.5 0.7 1 1.5 2
 
 
 
@@ -147,11 +152,11 @@ postclose rngstates1
 	
 	
 // For each value we want for each parameter (we have a very large number of scenarios!)
-	foreach j of numlist 0.2 0.4 0.6 {             // VE
-			foreach k of numlist 0.1 0.2 0.3 {         // st
-				foreach l of numlist 1 1.5 2 2.5 {        // RR  
-				foreach m of numlist 0.5 0.7 1 1.5 2 {        // possee  
-					foreach n of numlist  0.5 0.7 1 1.5 2 {        //  negsee
+	foreach j of numlist `VE_LIST' {             // VE
+			foreach k of numlist `ST_LIST' {         // st
+				foreach l of numlist `RR_LIST' {        // RR  
+				foreach m of numlist `POSSEE_LIST' {        // possee  
+					foreach n of numlist  `NEGSEE_LIST' {        //  negsee
 
 					
 		timer on 1	
