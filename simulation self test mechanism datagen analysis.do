@@ -33,7 +33,7 @@ capture postclose simcheck1
 capture postclose rngstates1
 
 clear
-
+timer clear
 
 ***************************************************************************
 * Setting fixed global parameters ******************************************
@@ -49,7 +49,7 @@ local reps 10
 
 
 // Set the stream to distribute the simulation. One stream for each computer
-global stream_number
+global stream_number = 1
 
 // This ensures that we can reconstruct the dataset 
 set rngstream $stream_number	
