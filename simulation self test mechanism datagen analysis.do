@@ -28,11 +28,9 @@
 
 // We drop all existing programmes and set the seed. 
 prog drop _all
-set rngstream 1		// This ensures that we can reconstruct the dataset 
 set seed 576819506
 capture postclose simcheck1
 capture postclose rngstates1
-capture postclose simresult
 
 clear
 
@@ -43,7 +41,22 @@ clear
 												
 // Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
 // Number of repetitions for that stream
-local reps 100
+// Individual manual run
+local reps 10
+
+// Automatic scripted run (see run simul.do)
+// local reps = $ireps
+
+
+// Set the stream to distribute the simulation. One stream for each computer
+global stream_number
+
+// This ensures that we can reconstruct the dataset 
+set rngstream $stream_number	
+
+
+// Comment this to execute run simul.do 
+global rmethod = "datagenuniform" 
 
 
 * N total (this is fixed)
@@ -64,10 +77,10 @@ global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
-local VE_LIST  0.2    // 0.2 0.4 0.6
+local VE_LIST  0.6    // 0.2 0.4 0.6
 local ST_LIST  0.3       // 0.1 0.2 0.3
-local RR_LIST  2.5     // 1 1.5 2 2.5
-local POSSEE_LIST 2    // 0.5 0.7 1 1.5 2
+local RR_LIST  1.5     // 1 1.5 2 2.5
+local POSSEE_LIST 0.7    // 0.5 0.7 1 1.5 2
 local NEGSEE_LIST 1    // 0.5 0.7 1 1.5 2
 
 
@@ -107,7 +120,7 @@ program define dosubset
 			if `i'>`reps' continue, break
 			
 			// This is where we run the data generation and analysis programmes, to obtain the results:
-			 quietly datagen, ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
+			 quietly $rmethod , ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
 			 if "`genonly'" == "" { 
 			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")                         loop(`loop')
 		     } 
@@ -136,7 +149,7 @@ postfile simcheck1  int(rep) int(loop) str8(method) str8(ve1 st1 s_rr1 possee1 n
 
 	
 * With this output file we collect information that we need to reconstruct  the dataset for an ith repetition		
-postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3) ///
+postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) int(streamnb) str2000(rngstate1 rngstate2 rngstate3) ///
 	using rngstates1_postfile, replace
 
 /*	
@@ -168,7 +181,7 @@ postclose rngstates1
 		local rngstate3 = substr(c(rngstate),4001,.)
 		
 		* Here is our output file to capture the states, so we can replicate the simulation for starting from first repetition  
-		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1)  ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
+		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1) ($stream_number) ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
 		
 		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')	
 				
@@ -202,7 +215,9 @@ gen VE = (1 - OR) *100
 keep if rep == 1
 
 keep meanb OR VE iter ve1 st1 s_rr1 possee1 negsee1
-append using "simresult"
+gen rmethod = "$rmethod"
+
+if fileexists("simresult.dta") append using "simresult"
 save simresult, replace 
 
 
