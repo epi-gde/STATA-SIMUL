@@ -41,23 +41,23 @@ timer clear
 												
 // Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
 // Number of repetitions for that stream
-// Individual manual run
-// local reps 10
+// For Individual manual run uncomment next line
+local reps 5000
 
-// Automatic scripted run (see run simul.do)
-local reps = $ireps
+// Automatic scripted run, un comment this (see run simul.do)
+// local reps = $ireps
 
-// Comment this to execute run simul.do 
-// global rmethod = "datagenuniform" 
+// Comment this to execute run simul.do, uncomment for manual run 
+global rmethod = "datagenbin" 
 
 
 
 // Set the stream to distribute the simulation. One stream for each computer
 global stream_number = 1
 
+
 // This ensures that we can reconstruct the dataset 
 set rngstream $stream_number	
-
 
 
 
@@ -79,11 +79,11 @@ global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
-local VE_LIST  0.6    // 0.2 0.4 0.6
+local VE_LIST  0.4    // 0.2 0.4 0.6
 local ST_LIST  0.3       // 0.1 0.2 0.3
-local RR_LIST  2     // 1 1.5 2 2.5
-local POSSEE_LIST 1.5    // 0.5 0.7 1 1.5 2
-local NEGSEE_LIST 1.5    // 0.5 0.7 1 1.5 2
+local RR_LIST  2.5     // 1 1.5 2 2.5
+local POSSEE_LIST 2    // 0.5 0.7 1 1.5 2
+local NEGSEE_LIST 1    // 0.5 0.7 1 1.5 2
 
 
 *********************************************************
