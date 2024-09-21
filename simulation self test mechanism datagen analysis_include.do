@@ -311,10 +311,10 @@ program define analysis_data
 capture noisily logistic case vacc 
  // Here we prepare to output the information - the N replications for each combination of ve, st, s_rr, possee, negsee, the logistic values, the checking values
  // We also collect information if the regression does not run: _rc>0
- 	if _rc==0 & !mi("`post'") post `post'  (`rep') (`loop') ("Total") /// 
+ 	if _rc==0 & !mi("`post'") post `post'  (`rep') (`loop') ($stream_number) ("Total") /// 
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")  /// 
 		(_b[vacc]) (_se[vacc]) (e(N)) (b4_a) (b4_b) (b4_c) (b4_d)  (b4st_a) (b4st_b) (b4st_c) (b4st_d)  (b4notst_a) (b4notst_b) (b4notst_c) (b4notst_d) 
-	if _rc>0 & !mi("`post'") post `post' ((`rep') (`loop') ("Total") ///
+	if _rc>0 & !mi("`post'") post `post' ((`rep') (`loop') ($stream_number) ("Total") ///
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   /// 
 		(.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) (.) (.) (.)
  
@@ -352,10 +352,10 @@ capture noisily logistic case vacc
 
  // Here we output the information after restricting to those consulting the GP - the N replications for each combination of ve, st, s_rr, possee, negsee, the logistic values, the checking values
  // We also collect information if the regression does not run: _rc>0
- 	if _rc==0 & !mi("`post'") post `post'  (`rep')  (`loop') ("Noadj") /// 
+ 	if _rc==0 & !mi("`post'") post `post'  (`rep')  (`loop') ($stream_number) ("Noadj") /// 
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")  /// 
 		(_b[vacc]) (_se[vacc]) (e(N)) (a11) (b11) (c11) (d11) (st_a) (st_b) (st_c) (st_d)  (notst_a) (notst_b) (notst_c) (notst_d)
-	if _rc>0 & !mi("`post'") post `post' ((`rep') (`loop') ("Noadj") ///
+	if _rc>0 & !mi("`post'") post `post' ((`rep') (`loop') ($stream_number) ("Noadj") ///
 	 ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   /// 
 		(.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) (.) (.) (.)
 
@@ -369,8 +369,8 @@ capture noisily logistic case vacc
 
  // Here we prepare to output the information - the N replications for each combination of ve, st, s_rr, possee, negsee, the logistic values, the checking values
  // We also collect information if the regression does not run: _rc>0
-  	if _rc==0 & !mi("`post'") post `post'  (`rep') (`loop') ("Adj")  ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   (_b[vacc]) (_se[vacc]) (e(N)) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) 
-	if _rc>0 & !mi("`post'") post `post' (`rep') (`loop') ("Adj")  ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) 
+  	if _rc==0 & !mi("`post'") post `post'  (`rep') (`loop') ($stream_number) ("Adj")  ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   (_b[vacc]) (_se[vacc]) (e(N)) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) 
+	if _rc>0 & !mi("`post'") post `post' (`rep') (`loop') ($stream_number) ("Adj")  ("`ve1'") ("`st1'") ("`s_rr1'") ("`possee1'") ("`negsee1'")   (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.) (.)  (.) 
 
 
 
