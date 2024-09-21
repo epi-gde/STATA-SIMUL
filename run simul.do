@@ -1,22 +1,26 @@
+/*
 global rmethod = "datagenuniform"
 
-foreach iloop of numlist 10 100 500 1000 2000 3000 4000 5000 {
+foreach iloop of numlist 3000 {
 	
 	global ireps = `iloop'
+	global FILEFLAG = "_uni"
 	do "simulation self test mechanism datagen analysis.do"
 	
 	
 	
 }
-
+*/
 
 global rmethod = "datagenbin"
 
-foreach iloop of numlist 10 100 500 1000 2000 3000 4000 5000 {
+fovalues iloop = 1/10  {
 	
-	global ireps = `iloop'
+	global ireps = 100
+	global FILEFLAG = "_bin_`iloop'"
 	do "simulation self test mechanism datagen analysis.do"
 	
 	
 	
 }
+*/
