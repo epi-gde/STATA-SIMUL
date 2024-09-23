@@ -40,7 +40,7 @@ timer clear
 ***************************************************************************
 // Global flag to identify the result file for further analysis 
 // if empty name fixed to simcheck1_postfile
-global FILEFLAG _GDRUN2
+global FILEFLAG _GDRUN3
 												
 // Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
 // Number of repetitions for that stream
@@ -54,7 +54,7 @@ local reps 1000
 global rmethod = "datagenbin" 
 
 // Set the stream to distribute the simulation. One stream for each computer
-global stream_number = 11
+global stream_number = 12
 
 ***************************************************************************
 * Setting fixed global parameters ******************************************
@@ -211,23 +211,31 @@ postclose rngstates1
 postclose simcheck1
 postclose rngstates1
 
-
+/*
 use simcheck1_postfile$FILEFLAG, clear
-keep if method == "Noadj"
-bysort loop : egen meanb = mean(b) 
-by loop : egen SD = sd(b)
-by loop : egen iter = max(rep) 
-by loop : gen SE = SD/sqrt(iter)
+// keep if method == "Noadj"
+bysort loop method : egen meanb = mean(b) 
+by loop method : egen SD = sd(b)
+by loop method : egen iter = max(rep) 
+by loop method : gen SE = SD/sqrt(iter)
+
 gen OR = exp(meanb)
 gen VE = (1 - OR) *100 
 keep if rep == 1
 
-keep meanb OR VE SD  SE  stream iter loop ve1 st1 s_rr1 possee1 negsee1
+keep meanb OR VE SD  SE  stream iter loop method  ve1 st1 s_rr1 possee1 negsee1
 gen rmethod = "$rmethod"
+destring ve1, gen(VE1)
+gen diff = VE - (VE1*100)
+
+encode method, gen(imethod)
+mean diff , over(imethod)
+
 
 if fileexists("simresult.dta") append using "simresult"
 save simresult, replace 
 
+*/
 
 timer off 2
 timer list 
