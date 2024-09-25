@@ -9,10 +9,11 @@
 
 
 // Version History
-// v3.1
+// v3.2
 //     - Original working version
 //     - Restructured 12 September 2024
 //     - use of binomial for binary variables instead of uniform/sort mechanism
+//     - final reviewed by Gilles Desvé => v3.2
 
 
 // Question, how do I loop around these different values?
