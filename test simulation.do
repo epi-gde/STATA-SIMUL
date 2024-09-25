@@ -109,4 +109,30 @@ testit
 timer list 
 
 
+// To be run at the end to produce a result file 
+
+use simcheck1_postfile$FILEFLAG, clear
+// keep if method == "Noadj"
+bysort loop method : egen meanb = mean(b) 
+by loop method : egen SD = sd(b)
+by loop method : egen iter = max(rep) 
+by loop method : gen SE = SD/sqrt(iter)
+
+gen OR = exp(meanb)
+gen VE = (1 - OR) *100 
+keep if rep == 1
+
+keep meanb OR VE SD  SE  stream iter loop method  ve1 st1 s_rr1 possee1 negsee1
+gen rmethod = "$rmethod"
+destring ve1, gen(VE1)
+gen diff = VE - (VE1*100)
+
+encode method, gen(imethod)
+mean diff , over(imethod)
+
+
+if fileexists("simresult.dta") append using "simresult"
+save simresult, replace 
+
+
 

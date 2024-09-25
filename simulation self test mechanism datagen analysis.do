@@ -29,41 +29,32 @@
 // We drop all existing programmes and set the seed. 
 prog drop _all
 set seed 576819506
+set rngstream 1 
+
+
 capture postclose simcheck1
 capture postclose rngstates1
 
 clear
-timer clear
+
 
 ***************************************************************************
 * Setting simulation parameters  ******************************************
 ***************************************************************************
 // Global flag to identify the result file for further analysis 
 // if empty name fixed to simcheck1_postfile
-global FILEFLAG _GDRUN3
+global FILEFLAG 
 												
-// Perform simulation (1000 repetitions) - TO BE CHANGED TO 10000
+// Perform simulation (5000 repetitions) 
 // Number of repetitions for that stream
-// For Individual manual run uncomment next line
-local reps 1000
+local reps 5000
 
-// Automatic scripted run, un comment this (see run simul.do)
-// local reps = $ireps
 
-// Comment this to execute run simul.do, uncomment for manual run 
-global rmethod = "datagenbin" 
 
-// Set the stream to distribute the simulation. One stream for each computer
-global stream_number = 12
 
 ***************************************************************************
 * Setting fixed global parameters ******************************************
 ***************************************************************************
-
-// This ensures that we can reconstruct the dataset 
-set rngstream $stream_number	
-
-
 
 * N total (this is fixed)
 global TOT = 60000
@@ -83,8 +74,9 @@ global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
-local VE_LIST   0.2 0.4 0.6
-local ST_LIST   0.1 0.2 0.3
+// List of each parameters to be tested in loops
+local VE_LIST   0.2 0.4 0.6   
+local ST_LIST  0.1 0.2 0.3
 local RR_LIST   1 1.5 2 2.5
 local POSSEE_LIST  0.5 0.7 1 1.5 2
 local NEGSEE_LIST  0.5 0.7 1 1.5 2
@@ -126,7 +118,7 @@ program define dosubset
 			if `i'>`reps' continue, break
 			
 			// This is where we run the data generation and analysis programmes, to obtain the results:
-			 quietly $rmethod , ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
+			 quietly datagen , ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
 			 if "`genonly'" == "" { 
 			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")                         loop(`loop') 
 		     } 
@@ -140,22 +132,19 @@ end
 * Here we start the job ! 
 **************************************
 
-timer clear 1
-timer clear 2
+timer clear 1   // Timer of each loop (allow to estimate global time)
+timer clear 2   // Store global time of the process
 timer on 2
-
-local timer1 = 0
-local counter = 1
 
 
 * Here is our output file of the simulation - we are giving the variable names here for what we collect.
 * As a reminder: "Method" refers to the VE in the VE in the population that consults the GP, unadjusted and adjusted for self-testing
-postfile simcheck1  int(rep) int(loop stream) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) float(b se) int(N) float(case1vacc0 case1vacc1 case0vacc0 case0vacc1 st_case1vacc0 st_case1vacc1 st_case0vacc0 st_case0vacc1 nost_case1vacc0 nost_case1vacc1 nost_case0vacc0 nost_case0vacc1)   ///
+postfile simcheck1  int(rep) int(loop) str8(method) str8(ve1 st1 s_rr1 possee1 negsee1) float(b se) int(N) float(case1vacc0 case1vacc1 case0vacc0 case0vacc1 st_case1vacc0 st_case1vacc1 st_case0vacc0 st_case0vacc1 nost_case1vacc0 nost_case1vacc1 nost_case0vacc0 nost_case0vacc1)   ///
 	using simcheck1_postfile$FILEFLAG, replace
 
 	
 * With this output file we collect information that we need to reconstruct  the dataset for an ith repetition		
-postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) int(streamnb) str2000(rngstate1 rngstate2 rngstate3 )  ///
+postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3 )  ///
 	using rngstates1_postfile$FILEFLAG, replace
 
 /*	
@@ -170,8 +159,11 @@ postclose rngstates1
 **************************************
 * Executing  the main loop  **********
 **************************************
-	
-	
+
+local timer1 = 0   // used to diplay loop time
+local counter = 1  // used to diplay loop number
+
+		
 // For each value we want for each parameter (we have a very large number of scenarios!)
 	foreach j of numlist `VE_LIST' {             // VE
 			foreach k of numlist `ST_LIST' {         // st
@@ -181,19 +173,20 @@ postclose rngstates1
 
 					
 		timer on 1	
+
 		// Here we collect info that can help us reconstruct the dataset (we need to partition to 3, as they are quite large)
 		local rngstate1 = substr(c(rngstate),1,2000)
 		local rngstate2 = substr(c(rngstate),2001,2000)
 		local rngstate3 = substr(c(rngstate),4001,.)
-		
 		* Here is our output file to capture the states, so we can replicate the simulation for starting from first repetition  
-		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1) ($stream_number) ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
+		post rngstates1   ("`j'") ("`k'") ("`l'") ("`m'") ("`n'")  (1) ("`rngstate1'") ("`rngstate2'") ("`rngstate3'")				
+		
 		
 		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')	
 				
+		
 		// Counter give feedback on where we are in the iterative process
 	    local ++counter
-	    
 		timer off 1 
 		// Timer give an indiction of time needed for each scenario (first display is 0)
 		quietly timer list 1
@@ -211,31 +204,6 @@ postclose rngstates1
 postclose simcheck1
 postclose rngstates1
 
-/*
-use simcheck1_postfile$FILEFLAG, clear
-// keep if method == "Noadj"
-bysort loop method : egen meanb = mean(b) 
-by loop method : egen SD = sd(b)
-by loop method : egen iter = max(rep) 
-by loop method : gen SE = SD/sqrt(iter)
-
-gen OR = exp(meanb)
-gen VE = (1 - OR) *100 
-keep if rep == 1
-
-keep meanb OR VE SD  SE  stream iter loop method  ve1 st1 s_rr1 possee1 negsee1
-gen rmethod = "$rmethod"
-destring ve1, gen(VE1)
-gen diff = VE - (VE1*100)
-
-encode method, gen(imethod)
-mean diff , over(imethod)
-
-
-if fileexists("simresult.dta") append using "simresult"
-save simresult, replace 
-
-*/
 
 timer off 2
 timer list 
