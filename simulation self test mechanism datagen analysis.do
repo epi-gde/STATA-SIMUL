@@ -96,14 +96,15 @@ include "simulation self test mechanism datagen analysis_include"
 
 
 ***************************************************************************
-* define the core routine to be executed repetively with one set of parameters 
+* define the core routine to be executed repetively with ONE set of parameters 
+* This routine is call repetitively by the main loop for EACH set of parameters
 ***************************************************************************
 // The dosubset programm is designed to allow redo of a subset with fixed parameters 
 // Before calling this part independently, you can retrieve the rngstate 
 // which was used originaly saved into the rngstate file 
 													
 program define dosubset
-	 syntax [, reps(int 1) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0) loop(int 0) genonly ]
+	 syntax [, reps(int 1) ve(real 0.2)  st(real 0.1) s_rr(real 1) possee(real 0.5) negsee(real 0.5) timer(real 0) loop(int 0) ]
 
         local repsplus1 = `reps'+1
 		* For each scenarios tested we would like xxxx repetitions (xxxx defined in local "reps", see above)
@@ -119,9 +120,9 @@ program define dosubset
 			
 			// This is where we run the data generation and analysis programmes, to obtain the results:
 			 quietly datagen , ve(`ve') st(`st') s_rr(`s_rr') possee(`possee') negsee(`negsee')
-			 if "`genonly'" == "" { 
-			     quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'")  s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'")                         loop(`loop') 
-		     } 
+			 quietly analysis_data, rep(`i') post(simcheck1) ve1("`ve'") st1("`st'") ///
+			            s_rr1("`s_rr'") possee1("`possee'") negsee1("`negsee'") loop(`loop') 
+		      
 	     }
 		 
 end
@@ -147,14 +148,6 @@ postfile simcheck1  int(rep) int(loop) str8(method) str8(ve1 st1 s_rr1 possee1 n
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3 )  ///
 	using rngstates1_postfile$FILEFLAG, replace
 
-/*	
-// Simulation testing
-// Uncomment this block to run only one step of the simulation
-dosubset, reps(1) genonly	
-postclose simcheck1
-postclose rngstates1	
-// End simulation testing
-*/
 	
 **************************************
 * Executing  the main loop  **********
