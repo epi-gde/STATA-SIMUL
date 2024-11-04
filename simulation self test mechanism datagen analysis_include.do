@@ -3,9 +3,8 @@
 // EpiConcept
 // Esther Kissling
 // Part of VEBIS project
-// This script is for a simulation for bias mechanism 1 (please see associated protocol)
-// Please see also the plan of analysis for "Simulation study for article on self-testing and COVID-19 VE"
-// Gilles Desve Review in september 2024
+// This script creates a simulation to understand bias introduced by self-testing in primary care test-negative design COVID-19 vaccine effectiveness studies
+// Gilles Desve Review in September 2024
 
 
 // Version History
@@ -16,11 +15,8 @@
 //     - final reviewed by Gilles Desvé => v3.2
 
 
-// Question, how do I loop around these different values?
 
-
-
-// this part is called by the loop to generate one subset of data  
+// This part is called by the loop to generate one subset of data  
 // Parameters are passed as variable to the command
 program define datagen
  
@@ -29,9 +25,9 @@ program define datagen
  // Here are our 5 varying parameters. We cycle the simulation through each value of parameter.
 	* ve		//  Parameter for true vaccine effectiveness
 	* st		// 	Parameter for self-testing in the unvaccinated population (here: among unvaccinated, as we assume an association between self-testing and vaccination)
-	* s_rr		// 	Parameter for the association between vaccination and self-testing (it is an RR)
-	* possee 	// 	Association (RR) between a positive self-test result and seeing a GP
-	* negsee 	// 	Association (RR) between a negative self-test result and seeing a GP
+	* s_rr		// 	Probability of self-testing among vaccinated
+	* possee 	// 	Probability of consultation after a positive self-test result, relative to that among those not self-testing
+	* negsee 	// 	Probability of consultation after a negative self-test result, relative to that among those not self-testing
 
 * OR from the varying VE
 local OR = (1-`ve')
@@ -59,9 +55,8 @@ replace case = 1 if case==.
 
 gen vacc = rbinomial(1,$VC) if case == 0
 
-// vaccine coverage among cases - depends on true VE, 20, 40, 60 
+// Vaccine coverage among cases - depends on true VE: 20, 40, 60 
 * VC among cases
-* There is probably an easier simplification, but the number of vacc cases is OR*(N vacc controls/N unvacc controls)* N cases/(1 + (OR*(N vacc controls/N unvacc controls)))
 count if case==0 & vacc==1
 local N_VACCCONTROL = r(N)
 count if case==0 & vacc==0
@@ -80,7 +75,7 @@ replace vacc = rbinomial(1,`VC_CASE') if case == 1
 gen selftest=  rbinomial(1,`st') if vacc == 0
 
 
-// Association (odds ratio) between vaccination and self-testing
+// Probability of self-testing among vaccinated
 // 1, 1.5, 2, 2.5
 local PROP_VACCSELFTEST = `st'*`s_rr'
 // Default selftest to 0 for vaccinated 
@@ -105,11 +100,11 @@ replace selftestresult = rbinomial(1,$INVSPEC_SELFTEST) if case==0 &  selftest==
 gen seeGP =rbinomial(1,$SEEGP) if selftest==0
 
 
-// Now we change "seeing the GP" among those doing a self-test and the test is positive
+// Now we change GP consultation among those doing a self-test and the test is positive
 // Default to 0 in that group 
 replace seeGP = rbinomial(1,`possee'*$SEEGP) if selftestresult==1 &  selftest==1 
 
-// Now we change "seeing the GP" among those doing a self-test and the test is negative
+// Now we change GP consultation among those doing a self-test and the test is negative
 // Default to 0 in that group 
 replace seeGP =rbinomial(1,`negsee'*$SEEGP) if selftestresult==0 &  selftest==1 	// The rest are 0
 
@@ -124,7 +119,7 @@ end
 ********************************************
 // This part is called for each subset of data (each repetition) 
 // and append to the results file 3 records.
-// one record for each type of analysis :  Total, NoAdj and Adj  analysis
+// one record for each type of analysis:  Total, NoAdj and Adj analysis
 program define analysis_data
 
 	syntax, [rep(int 0) post(string) ve1(string) st1(string)  s_rr1(string) possee1(string) negsee1(string) loop(int 0)]
