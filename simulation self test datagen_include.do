@@ -8,11 +8,12 @@
 
 
 // Version History
-// v3.2
+// v3.3
 //     - Original working version
 //     - Restructured 12 September 2024
 //     - use of binomial for binary variables instead of uniform/sort mechanism
 //     - final reviewed by Gilles Desvé => v3.2
+//     - final version updated => v3.3
 
 
 

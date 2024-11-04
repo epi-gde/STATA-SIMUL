@@ -14,11 +14,11 @@
 
 
 // Version History
-// v3.2
+// v3.3
 //   - New version 2 August 2024
 //   - Restructured 12 September 2024 by Gilles Desvé  => v3.2 
 //   - use of binomial for binary variables instead of uniform
-
+//   - Final version updated 2024-11-4
 
 
 ***************************************************************************

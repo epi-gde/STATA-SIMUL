@@ -9,7 +9,8 @@
 
 
 // Version History
-
+// Created and finalized for distribution with datagen and estimating mean bias scripts
+// v3.3 to be consistent with the project
 
 ***************************************************************************
 * Preliminaries ***********************************************************
