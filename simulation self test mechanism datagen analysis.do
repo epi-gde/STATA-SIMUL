@@ -2,16 +2,15 @@
 // December 2023
 // EpiConcept
 // Esther Kissling
-// Gilles Desve Review in september 2024
+// Gilles Desve Review in September 2024
+// This script creates a simulation to understand bias introduced by self-testing in primary care test-negative design COVID-19 vaccine effectiveness studies
 // Part of VEBIS project
-// This script is for a simulation for bias mechanism 1 (please see associated protocol)
-// Please see also the plan of analysis for "Simulation study for article on self-testing and COVID-19 VE"
-* Essentially we are creating a dataset of a population of ARI that have specific properties of vaccination being a COVID-19 case, self-testing, seeing a GP and a true VE
+* We are creating a dataset of a population of ARI that have specific properties of COVID-19 vaccination, being a COVID-19 case, self-testing, seeing a GP and a true VE
 * Then we select those seeing the GP and calculate the "estimated VE"
-* This script creates the simulated datasets along with the VE estimated from the simulated data. 
-* We would like to have 3 VE estimates: the VE in the total population of the simulated data, which should be essentially equal to the "true VE",
+* This script creates the simulated datasets along with the log odds ratio estimated from the simulated data. 
+* We obtain 3 VE estimates: the VE in the total population of the simulated data (just as a validation exercise), which should be essentially equal to the "true VE",
 * the VE among those consulting the GP, unadjusted for self-testing, and the VE among those consulting the GP adjusted for self-testing.
-* This script also creates the "states" dataset (very large) that collects the parameters needed to replicate exactly each analysis.
+* This script also creates the "states" dataset that collects the parameters needed to replicate exactly each analysis.
 
 
 // Version History
@@ -58,7 +57,7 @@ local reps 5000
 
 * N total (this is fixed)
 global TOT = 60000
-* N controls (this is fixed) - should it be?
+* N controls (this is fixed) 
 global CONTR = 50000
 * N case 
 global CASE = $TOT - $CONTR
@@ -66,15 +65,15 @@ global CASE = $TOT - $CONTR
 
 * Vaccine coverage  (this is fixed)
 global VC = 0.45
-* Sensitivity of self-test results - 60% (note that we could do sensitivity analyses varying this between 50 and 70%, for example, if we like )
+* Sensitivity of self-test results - 60% 
 global SENS = 0.6
-* Specificity of self-test results 99% (fixed)  (seem to not be in use ? )
+* Specificity of self-test results 99% (fixed)
 global SPEC_SELFTEST = 0.99     
 global INVSPEC_SELFTEST = (1-0.99)
 * Proportion of ARI who see GP (this is fixed)
 global SEEGP = 0.1
 
-// List of each parameters to be tested in loops
+// List of values for each parameter to be tested in loops
 local VE_LIST   0.2 0.4 0.6   
 local ST_LIST  0.1 0.2 0.3
 local RR_LIST   1 1.5 2 2.5
@@ -83,7 +82,7 @@ local NEGSEE_LIST  0.5 0.7 1 1.5 2
 
 
 *********************************************************
-* include datagen and analys routines                   *
+* Include datagen and analysis routines                 *
 * Datagen generates data for a set of parameters        *
 * and analysis_data does the analysis					*
 *********************************************************
@@ -91,12 +90,12 @@ local NEGSEE_LIST  0.5 0.7 1 1.5 2
 // Here we have as an included file the main part of our data generation
 // This randomly selects patients to allocate the various parameters to.
 // And we also define the data analysis program which will be used in the simulation
-include "simulation self test mechanism datagen analysis_include"	
+include "simulation self test datagen_include"	
 													// Open the included do-file and have a look.
 
 
 ***************************************************************************
-* define the core routine to be executed repetively with ONE set of parameters 
+* Defines the core routine to be executed repetively with ONE set of parameters 
 * This routine is call repetitively by the main loop for EACH set of parameters
 ***************************************************************************
 // The dosubset programm is designed to allow redo of a subset with fixed parameters 
@@ -130,10 +129,10 @@ end
 
 **************************************
 * Performing the simulation 
-* Here we start the job ! 
+* Here we start the job! 
 **************************************
 
-timer clear 1   // Timer of each loop (allow to estimate global time)
+timer clear 1   // Timer of each loop (allows to estimate global time)
 timer clear 2   // Store global time of the process
 timer on 2
 
@@ -144,7 +143,7 @@ postfile simcheck1  int(rep) int(loop) str8(method) str8(ve1 st1 s_rr1 possee1 n
 	using simcheck1_postfile$FILEFLAG, replace
 
 	
-* With this output file we collect information that we need to reconstruct  the dataset for an ith repetition		
+* With this output file we collect information that we need to reconstruct the dataset for an ith repetition		
 postfile rngstates1 str8(ve1 st1 s_rr1 possee1 negsee1) int(rep) str2000(rngstate1 rngstate2 rngstate3 )  ///
 	using rngstates1_postfile$FILEFLAG, replace
 
@@ -178,10 +177,10 @@ local counter = 1  // used to diplay loop number
 		dosubset, reps(`reps')  ve(`j') st(`k') s_rr(`l') possee(`m') negsee(`n') timer(`timer1') loop(`counter')	
 				
 		
-		// Counter give feedback on where we are in the iterative process
+		// The counter gives feedback on where we are in the iterative process
 	    local ++counter
 		timer off 1 
-		// Timer give an indiction of time needed for each scenario (first display is 0)
+		// The timer gives an indiction of time needed for each scenario (first display is 0)
 		quietly timer list 1
 		local timer1 = r(t1)
 		timer clear 1
